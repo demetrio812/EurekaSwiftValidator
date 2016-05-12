@@ -250,6 +250,12 @@ public class _SVPhoneRow: SVFieldRow<String, SVPhoneCell> {
     }
 }
 
+public class _SVPasswordRow: SVFieldRow<String, SVPasswordCell> {
+    public required init(tag: String?) {
+        super.init(tag: tag)
+    }
+}
+
 /// A String valued row where the user can enter arbitrary text.
 
 public final class SVTextRow: _SVTextRow, RowType {
@@ -309,6 +315,19 @@ public final class SVPhoneRow: _SVPhoneRow, RowType {
     }
 }
 
+public final class SVPasswordRow: _SVPasswordRow, RowType {
+    required public init(tag: String?) {
+        super.init(tag: tag)
+        /*onCellHighlight { cell, row  in
+         let color = cell.textLabel?.textColor
+         row.onCellUnHighlight { cell, _ in
+         cell.textLabel?.textColor = color
+         }
+         cell.textLabel?.textColor = cell.tintColor
+         }*/
+    }
+}
+
 public class SVTextCell: _SVFieldCell<String>, CellType  {
 
     required public init(style: UITableViewCellStyle, reuseIdentifier: String?) {
@@ -360,6 +379,21 @@ public class SVPhoneCell : _SVFieldCell<String>, CellType {
     public override func setup() {
         super.setup()
         textField.keyboardType = .PhonePad
+    }
+}
+
+public class SVPasswordCell: _SVFieldCell<String>, CellType  {
+    
+    required public init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    }
+    
+    public override func setup() {
+        super.setup()
+        textField.autocorrectionType = .No
+        textField.autocapitalizationType = .None
+        textField.keyboardType = .ASCIICapable
+        textField.secureTextEntry = true
     }
 }
 
