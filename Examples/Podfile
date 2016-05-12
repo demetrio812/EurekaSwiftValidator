@@ -1,5 +1,11 @@
+
+target 'Examples' do
+
 use_frameworks!
-link_with 'Examples'
 
 pod 'Eureka'
 pod 'SwiftValidator'
+
+end
+
+project 'Examples.xcodeproj'
