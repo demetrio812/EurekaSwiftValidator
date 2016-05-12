@@ -12,7 +12,7 @@ import SwiftValidator
 
 class ViewController: FormViewController {
 
-    var testHidden = true
+    var testHidden = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,7 +27,7 @@ class ViewController: FormViewController {
             $0.autoValidation = false
             $0.hidden = Condition.Function([""], {
                 (form) -> Bool in
-                return self.testHidden
+                return !self.testHidden
             })
         }
 
@@ -38,7 +38,7 @@ class ViewController: FormViewController {
             $0.autoValidation = false
         }
 
-                <<< SVTextRow() {
+                <<< SVEmailRow() {
             $0.title = "Email"
             $0.placeholder = ""
             $0.rules = [RequiredRule(), EmailRule(message: "Please insert a valid email address")]
@@ -80,6 +80,26 @@ class ViewController: FormViewController {
             $0.autoValidation = false
         }
 
+                <<< SVPasswordRow() {
+            $0.title = "Password"
+            $0.placeholder = ""
+            $0.rules = [RequiredRule()]
+            $0.autoValidation = false
+        }
+
+                <<< SVPhoneRow() {
+            $0.title = "Phone"
+            $0.placeholder = ""
+            $0.rules = [RequiredRule()]
+            $0.autoValidation = false
+        }
+
+                <<< SVIntRow() {
+            $0.title = "Int"
+            $0.placeholder = ""
+            $0.rules = [RequiredRule()]
+            $0.autoValidation = false
+        }
 
                 +++ Section("") {
             $0.tag = "result"
@@ -88,11 +108,11 @@ class ViewController: FormViewController {
                 <<< SwitchRow() {
             $0.title = "Hidden field?"
             $0.value = self.testHidden
-        }.onChange { [weak self] row in
+        }.onChange {
+            [weak self] row in
             if row.value ?? false {
                 self!.testHidden = true
-            }
-            else{
+            } else {
                 self!.testHidden = false
             }
             let hiddenField = self!.form.rowByTag("hidden")

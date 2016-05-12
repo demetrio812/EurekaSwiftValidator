@@ -27,6 +27,12 @@ public protocol SVTextFieldCell : TextFieldCell {
     func validate()
 }
 
+public protocol SVTextFieldRow {
+    var autoValidation : Bool { get set }
+    var valid : Bool { get }
+    func validate()
+}
+
 public class _SVFieldCell<T where T: Equatable, T: InputTypeInitiable>: _FieldCell<T>, SVTextFieldCell{
 
     required public init(style: UITableViewCellStyle, reuseIdentifier: String?) {
@@ -59,7 +65,7 @@ public class _SVFieldCell<T where T: Equatable, T: InputTypeInitiable>: _FieldCe
         let sameLeading: NSLayoutConstraint = NSLayoutConstraint(item: self.contentView, attribute: .Leading, relatedBy: .Equal, toItem: self.validationLabel, attribute: .Leading, multiplier: 1, constant: -20)
         let sameTrailing: NSLayoutConstraint = NSLayoutConstraint(item: self.textField, attribute: .Trailing, relatedBy: .Equal, toItem: self.validationLabel, attribute: .Trailing, multiplier: 1, constant: 0)
         let sameBottom: NSLayoutConstraint = NSLayoutConstraint(item: self.contentView, attribute: .Bottom, relatedBy: .Equal, toItem: self.validationLabel, attribute: .Bottom, multiplier: 1, constant: 4)
-        var all: [NSLayoutConstraint] = [sameLeading, sameTrailing, sameBottom]
+        let all: [NSLayoutConstraint] = [sameLeading, sameTrailing, sameBottom]
 //        all += fixedHeight
 //        all += yPosition
 //        all += xPosition
@@ -72,6 +78,20 @@ public class _SVFieldCell<T where T: Equatable, T: InputTypeInitiable>: _FieldCe
         resetField()
 
 
+    }
+
+    /**
+     Function responsible for updating the cell each time it is reloaded.
+     */
+    public override func update(){
+        super.update()
+        textLabel?.text = row.title
+        if !valid && autoValidation {
+            textLabel?.textColor = row.isDisabled ? .grayColor() : errorColor
+        } else {
+            textLabel?.textColor = row.isDisabled ? .grayColor() : .blackColor()
+        }
+        detailTextLabel?.text = row.displayValueFor?(row.value)
     }
 
     public func setRules(rules: [Rule]?) {
@@ -169,7 +189,7 @@ public class _SVFieldCell<T where T: Equatable, T: InputTypeInitiable>: _FieldCe
 }
 
 //             FieldRow<T: Any, Cell: CellType where Cell: BaseCell, Cell: TypedCellType, Cell: TextFieldCell, Cell.Value == T>: Row<T, Cell>, FieldRowConformance, KeyboardReturnHandler
-public class SVFieldRow<T: Any, Cell: CellType where Cell: BaseCell, Cell: TypedCellType, Cell: SVTextFieldCell, Cell.Value == T>: FieldRow<T, Cell> {
+public class SVFieldRow<T: Any, Cell: CellType where Cell: BaseCell, Cell: TypedCellType, Cell: SVTextFieldCell, Cell.Value == T>: FieldRow<T, Cell>, SVTextFieldRow {
     public required init(tag: String?) {
         super.init(tag: tag)
     }
@@ -250,6 +270,12 @@ public class _SVPhoneRow: SVFieldRow<String, SVPhoneCell> {
     }
 }
 
+public class _SVPasswordRow: SVFieldRow<String, SVPasswordCell> {
+    public required init(tag: String?) {
+        super.init(tag: tag)
+    }
+}
+
 /// A String valued row where the user can enter arbitrary text.
 
 public final class SVTextRow: _SVTextRow, RowType {
@@ -297,6 +323,20 @@ public final class SVEmailRow: _SVEmailRow, RowType {
 
 /// A String valued row where the user can enter a phone number.
 public final class SVPhoneRow: _SVPhoneRow, RowType {
+    required public init(tag: String?) {
+        super.init(tag: tag)
+        /*onCellHighlight { cell, row  in
+            let color = cell.textLabel?.textColor
+            row.onCellUnHighlight { cell, _ in
+                cell.textLabel?.textColor = color
+            }
+            cell.textLabel?.textColor = cell.tintColor
+        }*/
+    }
+}
+
+/// A String valued row where the user can enter secure text.
+public final class SVPasswordRow: _SVPasswordRow, RowType {
     required public init(tag: String?) {
         super.init(tag: tag)
         /*onCellHighlight { cell, row  in
@@ -363,6 +403,21 @@ public class SVPhoneCell : _SVFieldCell<String>, CellType {
     }
 }
 
+public class SVPasswordCell : _SVFieldCell<String>, CellType {
+
+    required public init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    }
+
+    public override func setup() {
+        super.setup()
+        textField.autocorrectionType = .No
+        textField.autocapitalizationType = .None
+        textField.keyboardType = .ASCIICapable
+        textField.secureTextEntry = true
+    }
+}
+
 // TODO extend _FieldCell and _FieldRow to avoid custom components
 // TODO better way for styleTransformers
 
@@ -410,10 +465,10 @@ extension Form {
 
         let rows = allRows
         for row in rows {
-            if row is SVTextRow {
-                let svRow = (row as! SVTextRow)
-                svRow.evaluateHidden()
-                if !svRow.isHidden { // skip if hidden
+            if row is SVTextFieldRow {
+                var svRow = (row as! SVTextFieldRow)
+                row.evaluateHidden()
+                if !row.isHidden { // skip if hidden
                     svRow.validate()
                     let rowValid = svRow.valid
                     svRow.autoValidation = true // from now on autovalidation is enabled
